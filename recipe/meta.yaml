@@ -1,30 +1,31 @@
 {% set name = "tensorboardX" %}
-{% set version = "2.2" %}
-{% set sha256 = "dff39191ca26bce9c5c82b9a013558e8c17602d17279f70270ca3341f127c4cf" %}
+{% set version = "2.6.2.2" %}
+{% set sha256 = "c6476d7cd0d529b0b72f4acadb1269f9ed8b22f441e87a84f2a3b940bb87b666" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  fn: {{ name }}-{{ version }}.tar.gz
-  url: https://github.com/lanpa/{{ name }}/archive/v{{ version }}.tar.gz
+  url: https://pypi.io/packages/source/{{ name[0] }}/tensorboardx/{{ name }}-{{ version }}.tar.gz
   sha256: {{ sha256 }}
 
 build:
-  noarch: python
   number: 0
-  script: {{ PYTHON }} -m pip install . --no-deps -vv
+  script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
 
 requirements:
   host:
-    - python >=3.6
+    - python
     - pip
+    - setuptools-scm
+    - setuptools
+    - wheel
   run:
-    - python >=3.6
+    - python
     - numpy
-    - protobuf >=3.2.0
-    - six
+    - packaging
+    - protobuf >=3.20
 
 test:
   imports:
@@ -37,6 +38,10 @@ test:
     - tensorboardX.summary
     - tensorboardX.writer
     - tensorboardX.x2num
+  commands:
+    - pip check
+  requires:
+    - pip
 
 about:
   home: https://github.com/lanpa/tensorboardx
@@ -44,10 +49,9 @@ about:
   license_family: MIT
   license_file: LICENSE
   summary: tensorboard for pytorch
-
   description: |
     Write tensorboard events from PyTorch (and Chainer, MXNet, NumPy, ...)
-  doc_url: https://tensorboardx.readthedocs.io/en/latest/
+  doc_url: https://tensorboardx.readthedocs.io
   dev_url: https://github.com/lanpa/tensorboardx
 
 extra:
