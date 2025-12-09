@@ -1,25 +1,26 @@
 {% set name = "tensorboardX" %}
-{% set version = "2.6.2.2" %}
-{% set sha256 = "c6476d7cd0d529b0b72f4acadb1269f9ed8b22f441e87a84f2a3b940bb87b666" %}
+{% set version = "2.6.4" %}
+{% set sha256 = "b163ccb7798b31100b9f5fa4d6bc22dad362d7065c2f24b51e50731adde86828" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/tensorboardx/{{ name }}-{{ version }}.tar.gz
+  url: https://pypi.org/packages/source/t/tensorboardX/tensorboardx-2.6.4.tar.gz
   sha256: {{ sha256 }}
 
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+  skip: true  # [py<39]
 
 requirements:
   host:
     - python
     - pip
     - setuptools-scm
-    - setuptools
+    - setuptools >=42
     - wheel
   run:
     - python
