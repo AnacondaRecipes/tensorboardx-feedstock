@@ -1,14 +1,14 @@
 {% set name = "tensorboardX" %}
 {% set version = "2.6.4" %}
-{% set sha256 = "b163ccb7798b31100b9f5fa4d6bc22dad362d7065c2f24b51e50731adde86828" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://pypi.org/packages/source/t/tensorboardX/tensorboardx-2.6.4.tar.gz
-  sha256: {{ sha256 }}
+  # url: https://pypi.org/packages/source/{{ name[0] }}/{{ name }}/{{ name|lower }}-{{ version }}.tar.gz
+  url: https://github.com/lanpa/{{ name }}/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: 05509414a1e8f1d7963a34c3db9305d78c63698fe382858cb75392deb68f6e50
 
 build:
   number: 0
@@ -28,7 +28,18 @@ requirements:
     - packaging
     - protobuf >=3.20
 
+# E       ModuleNotFoundError: No module named 'soundfile'
+{% set deselect_tests = " --deselect=tests/test_writer.py::WriterTest::test_writer" %}
+{% set ignore_tests = " --ignore=tests/test_summary.py" %}
+# E           ModuleNotFoundError: No module named 'visdom'
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_visdom.py" %}
+# E subprocess.CalledProcessError: Command '['ruff', 'check', 'tensorboardX']' returned non-zero exit status 1.
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_lint.py::test_linting" %}
+
 test:
+  source_files:
+    - tests
+    - examples
   imports:
     - tensorboardX
     - tensorboardX.crc32c
@@ -39,10 +50,21 @@ test:
     - tensorboardX.summary
     - tensorboardX.writer
     - tensorboardX.x2num
+  requires:
+    - pytest
+    - pip
+    - pytorch >=2.5.1
+    - boto3 >=1.35.81
+    - tensorboard >=2.18.0
+    - matplotlib-base >=3.9.4
+    - pillow >=11.0.0
+    - moto <5
+    - ruff >=0.8.4
+    - onnx
   commands:
     - pip check
-  requires:
-    - pip
+    - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
+    - pytest tests {{ ignore_tests }} {{ deselect_tests }}
 
 about:
   home: https://github.com/lanpa/tensorboardx
