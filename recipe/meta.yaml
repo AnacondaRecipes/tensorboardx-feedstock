@@ -59,7 +59,7 @@ test:
     - tensorboardX.writer
     - tensorboardX.x2num
   requires:
-    - pytest
+    - pytest >=8.3.4
     - pip
     - pytorch >=2.5.1
     - boto3 >=1.35.81
@@ -67,7 +67,7 @@ test:
     - matplotlib-base >=3.9.4
     - pillow >=11.0.0
     - moto <5
-    - onnx
+    - onnx >=1.17.0
   commands:
     - pip check
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
