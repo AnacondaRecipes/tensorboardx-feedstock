@@ -1,25 +1,25 @@
 {% set name = "tensorboardX" %}
-{% set version = "2.6.2.2" %}
-{% set sha256 = "c6476d7cd0d529b0b72f4acadb1269f9ed8b22f441e87a84f2a3b940bb87b666" %}
+{% set version = "2.6.4" %}
 
 package:
   name: {{ name|lower }}
   version: {{ version }}
 
 source:
-  url: https://pypi.io/packages/source/{{ name[0] }}/tensorboardx/{{ name }}-{{ version }}.tar.gz
-  sha256: {{ sha256 }}
+  url: https://github.com/lanpa/{{ name }}/archive/refs/tags/v{{ version }}.tar.gz
+  sha256: 05509414a1e8f1d7963a34c3db9305d78c63698fe382858cb75392deb68f6e50
 
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
+  skip: true  # [py<39]
 
 requirements:
   host:
     - python
     - pip
     - setuptools-scm
-    - setuptools
+    - setuptools >=42
     - wheel
   run:
     - python
@@ -27,7 +27,27 @@ requirements:
     - packaging
     - protobuf >=3.20
 
+# E       ModuleNotFoundError: No module named 'soundfile'
+{% set deselect_tests = " --deselect=tests/test_writer.py::WriterTest::test_writer" %}
+{% set ignore_tests = " --ignore=tests/test_summary.py" %}
+# E           ModuleNotFoundError: No module named 'visdom'
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_visdom.py" %}
+# E subprocess.CalledProcessError: Command '['ruff', 'check', 'tensorboardX']' returned non-zero exit status 1.
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_lint.py::test_linting" %}
+# E   AttributeError: module 'ssl' has no attribute 'wrap_socket' (Deprecated)
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_embedding.py" %}  # [py>=312]
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_record_writer.py" %}  # [py>=312]
+# E   ValueError: cannot find context for 'fork'
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_multiprocess_write.py" %}  # [win]
+# E       OSError: [Errno 22] Invalid argument: 's3://this/is/apen\\00002/default\\metadata.tsv'
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_embedding.py::EmbeddingTest::test_embedding_s3_mock" %}  # [win]
+# E OSError: [WinError 123] The filename, directory name, or volume label syntax is incorrect: 's3:'
+{% set deselect_tests = deselect_tests + " --deselect=tests/test_record_writer.py::RecordWriterTest::test_record_writer_s3" %}  # [win]
+
 test:
+  source_files:
+    - tests
+    - examples
   imports:
     - tensorboardX
     - tensorboardX.crc32c
@@ -38,10 +58,20 @@ test:
     - tensorboardX.summary
     - tensorboardX.writer
     - tensorboardX.x2num
+  requires:
+    - pytest >=8.3.4
+    - pip
+    - pytorch >=2.5.1
+    - boto3 >=1.35.81
+    - tensorboard >=2.18.0
+    - matplotlib-base >=3.9.4
+    - pillow >=11.0.0
+    - moto <5
+    - onnx >=1.17.0
   commands:
     - pip check
-  requires:
-    - pip
+    - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
+    - pytest tests {{ ignore_tests }} {{ deselect_tests }}
 
 about:
   home: https://github.com/lanpa/tensorboardx
