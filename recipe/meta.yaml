@@ -35,8 +35,10 @@ requirements:
 # E subprocess.CalledProcessError: Command '['ruff', 'check', 'tensorboardX']' returned non-zero exit status 1.
 {% set deselect_tests = deselect_tests + " --deselect=tests/test_lint.py::test_linting" %}
 # E   AttributeError: module 'ssl' has no attribute 'wrap_socket' (Deprecated)
-{% set ignore_tests = ignore_tests + " --ignore=tests/test_embedding.py" %}  # [py>312]
-{% set ignore_tests = ignore_tests + " --ignore=tests/test_record_writer.py" %}  # [py>312]
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_embedding.py" %}  # [py>=312]
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_record_writer.py" %}  # [py>=312]
+# E   ValueError: cannot find context for 'fork'
+{% set ignore_tests = ignore_tests + " --ignore=tests/test_multiprocess_write.py" %}  # [win]
 
 test:
   source_files:
