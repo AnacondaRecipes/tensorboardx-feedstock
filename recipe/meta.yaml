@@ -75,6 +75,8 @@ test:
     - pysoundfile >=0.12.1
   commands:
     - pip check
+    # botocore InvalidConfigError: Invalid CA bundle (PBP workers export AWS_CA_BUNDLE/REQUESTS_CA_BUNDLE as empty strings)
+    - unset AWS_CA_BUNDLE REQUESTS_CA_BUNDLE  # [not win and py<=311]
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
     - pytest tests -vv {{ ignore_tests }} {{ deselect_tests }}
 
