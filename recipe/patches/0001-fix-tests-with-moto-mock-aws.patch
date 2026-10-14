@@ -1,0 +1,39 @@
+From ea9779f58513db364497da0bb42c96c7dfa5173a Mon Sep 17 00:00:00 2001
+From: Andrii Vetroumov <avetroumov@anaconda.com>
+Date: Wed, 14 Oct 2026 17:00:59 +0300
+Subject: [PATCH] fix tests with moto mock aws
+
+---
+ tests/test_embedding.py     | 2 +-
+ tests/test_record_writer.py | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tests/test_embedding.py b/tests/test_embedding.py
+index 6a93f0c..04b3c6f 100644
+--- a/tests/test_embedding.py
++++ b/tests/test_embedding.py
+@@ -2,7 +2,7 @@ import unittest
+ import torch
+ import boto3
+ from tensorboardX import SummaryWriter
+-from moto import mock_s3
++from moto import mock_aws
+ 
+ 
+ 
+diff --git a/tests/test_record_writer.py b/tests/test_record_writer.py
+index d68f768..e68cafc 100644
+--- a/tests/test_record_writer.py
++++ b/tests/test_record_writer.py
+@@ -4,7 +4,7 @@ from tensorboardX.record_writer import S3RecordWriter, make_valid_tf_name, GCSRe
+ import os
+ import boto3
+ import shutil
+-from moto import mock_s3
++from moto import mock_aws
+ 
+ os.environ.setdefault("AWS_ACCESS_KEY_ID", "foobar_key")
+ os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "foobar_secret")
+-- 
+2.54.0
+
