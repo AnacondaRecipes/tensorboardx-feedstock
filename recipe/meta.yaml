@@ -1,5 +1,5 @@
 {% set name = "tensorboardX" %}
-{% set version = "2.6.4" %}
+{% set version = "2.6.5" %}
 
 package:
   name: {{ name|lower }}
@@ -7,33 +7,30 @@ package:
 
 source:
   url: https://github.com/lanpa/{{ name }}/archive/refs/tags/v{{ version }}.tar.gz
-  sha256: 05509414a1e8f1d7963a34c3db9305d78c63698fe382858cb75392deb68f6e50
+  sha256: c6f18c3612786e2a23c34ac16de99ee88de1ff7227e5e665855da6eefb7b8054
 
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
-  skip: true  # [py<39]
+  skip: true  # [py<310]
 
 requirements:
   host:
     - python
     - pip
-    - setuptools-scm
     - setuptools >=42
     - wheel
+    - setuptools-scm
   run:
     - python
     - numpy
     - packaging
     - protobuf >=3.20
 
-# E       ModuleNotFoundError: No module named 'soundfile'
-{% set deselect_tests = " --deselect=tests/test_writer.py::WriterTest::test_writer" %}
-{% set ignore_tests = " --ignore=tests/test_summary.py" %}
 # E           ModuleNotFoundError: No module named 'visdom'
-{% set ignore_tests = ignore_tests + " --ignore=tests/test_visdom.py" %}
+{% set ignore_tests = " --ignore=tests/test_visdom.py" %}
 # E subprocess.CalledProcessError: Command '['ruff', 'check', 'tensorboardX']' returned non-zero exit status 1.
-{% set deselect_tests = deselect_tests + " --deselect=tests/test_lint.py::test_linting" %}
+{% set deselect_tests = " --deselect=tests/test_lint.py::test_linting" %}
 # E   AttributeError: module 'ssl' has no attribute 'wrap_socket' (Deprecated)
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_embedding.py" %}  # [py>=312]
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_record_writer.py" %}  # [py>=312]
@@ -66,12 +63,14 @@ test:
     - tensorboard >=2.18.0
     - matplotlib-base >=3.9.4
     - pillow >=11.0.0
-    - moto <5
+    # Prevent resolving error during build in conda environment, no upperbound to give resolver a chance to take correct version
+    - moto
     - onnx >=1.17.0
+    - pysoundfile >=0.12.1
   commands:
     - pip check
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
-    - pytest tests {{ ignore_tests }} {{ deselect_tests }}
+    - pytest tests -vv {{ ignore_tests }} {{ deselect_tests }}
 
 about:
   home: https://github.com/lanpa/tensorboardx
