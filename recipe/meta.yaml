@@ -1,5 +1,5 @@
 {% set name = "tensorboardX" %}
-{% set version = "2.6.4" %}
+{% set version = "2.6.5" %}
 
 package:
   name: {{ name|lower }}
@@ -7,33 +7,33 @@ package:
 
 source:
   url: https://github.com/lanpa/{{ name }}/archive/refs/tags/v{{ version }}.tar.gz
-  sha256: 05509414a1e8f1d7963a34c3db9305d78c63698fe382858cb75392deb68f6e50
+  sha256: c6f18c3612786e2a23c34ac16de99ee88de1ff7227e5e665855da6eefb7b8054
+  patches:
+    # Replace deprecated moto mock_s3 decorator with mock_aws for moto 5.x compatibility
+    - patches/0001-fix-tests-with-moto-mock-aws.patch  # [py>311]
 
 build:
   number: 0
   script: {{ PYTHON }} -m pip install . --no-deps --no-build-isolation -vv
-  skip: true  # [py<39]
+  skip: true  # [py<310]
 
 requirements:
   host:
     - python
     - pip
-    - setuptools-scm
     - setuptools >=42
     - wheel
+    - setuptools-scm
   run:
     - python
     - numpy
     - packaging
     - protobuf >=3.20
 
-# E       ModuleNotFoundError: No module named 'soundfile'
-{% set deselect_tests = " --deselect=tests/test_writer.py::WriterTest::test_writer" %}
-{% set ignore_tests = " --ignore=tests/test_summary.py" %}
 # E           ModuleNotFoundError: No module named 'visdom'
-{% set ignore_tests = ignore_tests + " --ignore=tests/test_visdom.py" %}
+{% set ignore_tests = " --ignore=tests/test_visdom.py" %}
 # E subprocess.CalledProcessError: Command '['ruff', 'check', 'tensorboardX']' returned non-zero exit status 1.
-{% set deselect_tests = deselect_tests + " --deselect=tests/test_lint.py::test_linting" %}
+{% set deselect_tests = " --deselect=tests/test_lint.py::test_linting" %}
 # E   AttributeError: module 'ssl' has no attribute 'wrap_socket' (Deprecated)
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_embedding.py" %}  # [py>=312]
 {% set ignore_tests = ignore_tests + " --ignore=tests/test_record_writer.py" %}  # [py>=312]
@@ -66,12 +66,19 @@ test:
     - tensorboard >=2.18.0
     - matplotlib-base >=3.9.4
     - pillow >=11.0.0
-    - moto <5
+    # Prevent resolver error during build in conda environment,
+    # in main we have `moto` 4.1.3 which is taken by resolver, but it's build only for python <=310, all other builds will fail.
+    # Patch tests in a way to support `moto` >=5
+    - moto  # [py>311]
+    - moto <5  # [py<=311]
     - onnx >=1.17.0
+    - pysoundfile >=0.12.1
   commands:
     - pip check
+    # botocore InvalidConfigError: Invalid CA bundle (PBP workers export AWS_CA_BUNDLE/REQUESTS_CA_BUNDLE as empty strings)
+    - unset AWS_CA_BUNDLE REQUESTS_CA_BUNDLE  # [not win and py<=311]
     - python -c "from importlib.metadata import version; assert(version('{{ name }}')=='{{ version }}')"
-    - pytest tests {{ ignore_tests }} {{ deselect_tests }}
+    - pytest tests -vv {{ ignore_tests }} {{ deselect_tests }}
 
 about:
   home: https://github.com/lanpa/tensorboardx
